@@ -24,6 +24,7 @@ This project automates the process of creating and sending out Bluebeam Revu Stu
 
 The project relies on a specific folder structure within Google Drive. Ensure your Google Drive is set up as follows:
 
+```
 /content/drive/MyDrive/ProjectReviews/
 ├── PDFs/
 │   ├── Drawing1.pdf
@@ -33,7 +34,7 @@ The project relies on a specific folder structure within Google Drive. Ensure yo
 └── EmailTemplates/
     ├── SubjectLineTemplate.txt
     └── EmailBodyTemplate.txt
-
+```
 
 ### Explanation of Folders
 - **Bluebeam_Review/Session_Files/**: Stores all project-specific review files (e.g., drawings, specifications).
