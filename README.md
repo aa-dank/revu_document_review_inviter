@@ -15,8 +15,8 @@ This project is designed for distributing PDF files for review using Bluebeam Re
 ## Overview
 
 This project automates the process of creating and sending out Bluebeam Revu Studio Session invitations. The typical use case involves:
-1. Uploading project files (mostly PDFs) for review.
-2. Creating a Bluebeam session and retrieving the session ID.
+1. Uploading project files (mostly PDFs) for review to Bluebeam Revu Studio session.
+2. Retrieving the session ID.
 3. Using a Google Colab notebook to generate email content with the session details and file links.
 4. Sending out the email invitations with the generated content.
 
@@ -25,27 +25,30 @@ This project automates the process of creating and sending out Bluebeam Revu Stu
 The project relies on a specific folder structure within Google Drive. Ensure your Google Drive is set up as follows:
 
 ```
-/content/drive/MyDrive/ProjectReviews/
-├── PDFs/
-│   ├── Drawing1.pdf
-│   ├── Drawing2.pdf
-│   └── ...
-├── ReviewerComments.xlsx
-└── EmailTemplates/
-    ├── SubjectLineTemplate.txt
-    └── EmailBodyTemplate.txt
+/content/drive/Shareddrives/PPDO_data_systems/document_review_invite_sender
+└── invite_sender.py
+
+/content/drive/Shareddrives/PPDO_data_systems/plan_review_sender/
+└── rev_dist_files
+      ├── gmail_creds.json
+      └── reviewer_comments.xls
 ```
 
-### Explanation of Folders
-- **Bluebeam_Review/Session_Files/**: Stores all project-specific review files (e.g., drawings, specifications).
-- **Bluebeam_Review/Shared_Links/**: Contains shareable links for files too large to be sent as email attachments.
-- **Templates/**: Holds templates for the email content.
-- **Output/**: Stores generated email content for review.
+### Explanation of Files
+- **invite_sender.py**: This script processes email content and file paths. It handles:
+  - Reading the email template from the `Templates/` directory.
+  - Formatting the email subject and body.
+  - Saving the generated email text to the `Output/` directory.
+  - Sending the email using `yagmail` with OAuth2 credentials.
+
+- **document_review_invite_sender.ipynb**: The main notebook that guides the user through the process of generating email content for Bluebeam session invitations. It includes sections for inputting project details, mounting Google Drive, and creating email content based on the file information.
+
+- **reviewer_comments.xls** Spreadsheet for docuement reviewers to fill out en lieu of marking up the docuemnts in Revu
 
 ## Setup and Dependencies
 
 To use the Colab notebook effectively, you need the following:
-- A Google Account with access to Google Drive.
+- A Google Account with access to Google Drive and PPDO_data_systems shared drive.
 - A Google Colab environment to run the notebook.
 - Access to Bluebeam Revu with permissions to create Studio Sessions.
 
@@ -99,19 +102,26 @@ Ensure these directories exist and are correctly set up in your Google Drive.
    - Name the session using the format: `<Project_Number>_<Review_Type>_Completion_<Date>`.
    - Retrieve the session ID (found in the session settings or invite window).
 
-2. **Upload Files to Google Drive**:
-   - Place the PDF files for review in the appropriate folder under `Session_Files/`.
+2. **Prepare the Google Colab Notebook**:
+   - Open the `document_review_invite_sender.ipynb` notebook in Google Colab.
+   - Mount your Google Drive by running the cell with the command:
+     ```python
+     from google.colab import drive
+     drive.mount('/content/drive')
+     ```
+   - Ensure the necessary files are in the correct directories in your Google Drive.
 
-3. **Generate Email Content Using Colab Notebook**:
-   - Open the Colab notebook (`document_review_invite_sender.ipynb`).
-   - Mount Google Drive when prompted.
-   - Follow the instructions in the notebook to fill out the form with session details and file paths.
-   - Run the form cell to generate the email content.
+3. **Input Project Details**:
+   - Fill in the required project details in the notebook cells, such as `project_manager`, `project_number`, `project_name`, `recharge_number`, `review_type`, `download_url`, `review_end_date`, and `notes_for_reviewers`.
 
-4. **Copy and Paste Email Content**:
-   - Copy the generated subject line and email body from the output.
-   - Paste it into your email client (Thunderbird recommended).
-   - Attach the Excel sheet with reviewer comments and any original attachments.
+4. **Generate Email Content**:
+   - Run the notebook cells to generate the email content. The notebook will format the email subject and body based on the provided project details and template.
+
+5. **Send Email Invitations**:
+   - Use the `yagmail` library to send the generated email content to the list of reviewer emails. Ensure your OAuth2 credentials are correctly set up as described in the troubleshooting section.
+
+6. **Verify Email Sent**:
+   - Check the Colab output logs to confirm that the email invitations were sent successfully.
 
 ## Troubleshooting
 
@@ -123,9 +133,6 @@ Ensure these directories exist and are correctly set up in your Google Drive.
    - Check that the files are uploaded to the correct directory in Google Drive.
    - Ensure the file paths in the notebook are updated correctly.
 
-3. **Email Content Not Generating**:
-   - Verify the email template file exists in the `Templates/` directory.
-   - Check the logs in the Colab output for error messages.
 
 ### 4. **OAuth2 Gmail Credentials for `yagmail`**
 
@@ -139,19 +146,18 @@ This project uses `yagmail` to send email invitations via Gmail. For enhanced se
    - Configure the OAuth consent screen and create OAuth2 client credentials.
    - Download the `credentials.json` file. This file contains your `client_id` and `client_secret`.
 
-2. **Generate `oauth2_creds.json` File**:
+2. **Generate `gmail_creds.json` File**:
    - Use the `yagmail` setup process to create an OAuth2 credentials file:
      ```bash
      python -m yagmail.register --oauth2
      ```
    - Follow the prompts to upload the `credentials.json` file and authenticate. The resulting `oauth2_creds.json` file will be saved locally.
+   - Can be created manually too. JSON keys in the file are email_address, google_client_id, google_client_secret, and google_refresh_token 
 
 
 
 #### **Common Issues and Fixes**
 
-- **OAuth2 File Not Found**: Ensure the `oauth2_creds.json` file is in the correct path (e.g., `/content/drive/MyDrive/oauth2_creds.json`).
+- **OAuth2 File Not Found**: Ensure the `gmail_creds.json` file is in the correct path.
 - **Invalid Credentials Error**: If you receive an "Invalid Credentials" error, try regenerating the OAuth2 file using the `yagmail.register` command.
 - **Permission Denied**: Make sure the Gmail account has enabled access to "Less Secure Apps" or set up the Gmail API with the correct scopes during the OAuth2 setup.
-
-By using OAuth2, your Gmail credentials are securely handled, reducing the risk of exposing sensitive information.
